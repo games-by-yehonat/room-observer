@@ -1,2 +1,3 @@
-# room-observer
-Room Observer
+# Room Observer
+
+Use the Observer Pattern
