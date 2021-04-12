@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class MovementHandler : MonoBehaviour
 {
@@ -9,17 +8,11 @@ public class MovementHandler : MonoBehaviour
 
     private bool _facingRight;
     public float Move { get; private set; }
-    private bool _coolDown;
-    private WaitForSeconds _delay;
-
-    private void Start()
-    {
-        _delay = new WaitForSeconds(.5f);
-    }
 
     private void Update()
     {
-        if (GameController.Instance.IsDeath || _coolDown)
+        Debug.Log($"death: {GameController.Instance.IsDeath} coolDown {GameController.Instance.CoolDown} playing {GameController.Instance.Playing}");
+        if (GameController.Instance.IsDeath || GameController.Instance.CoolDown || !GameController.Instance.Playing)
         {
             return;
         }
@@ -76,17 +69,5 @@ public class MovementHandler : MonoBehaviour
         scale.x *= -1f;
         
         t.localScale = scale;
-    }
-
-    public void SetCoolDown()
-    {
-        _coolDown = true;
-        StartCoroutine(CoolDown());
-    }
-
-    private IEnumerator CoolDown()
-    {
-        yield return _delay;
-        _coolDown = false;
     }
 }

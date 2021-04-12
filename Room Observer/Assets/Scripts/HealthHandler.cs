@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class HealthHandler : MonoBehaviour, IDamageable, ISubject
@@ -20,6 +19,11 @@ public class HealthHandler : MonoBehaviour, IDamageable, ISubject
 
     public void TakeDamage()
     {
+        if (GameController.Instance.CoolDown)
+        {
+            return;
+        }
+        
         Health--;
 
         if (Health > 0)
@@ -29,10 +33,13 @@ public class HealthHandler : MonoBehaviour, IDamageable, ISubject
         else
         {
             Health = 0;
-            puff.SetActive(true);
-            anim.SetDeathState();
+            
             GameController.Instance.GameOver();
+            
+            puff.SetActive(true);
         }
+        
+        anim.SetDeathState();
 
         NotifyObserver();
     }
