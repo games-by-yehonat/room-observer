@@ -1,98 +1,33 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-
-public class SpawnPoint
-{
-    public readonly Transform Trans;
-    public bool Taken;
-
-    public SpawnPoint(Transform trans, bool taken)
-    {
-        Trans = trans;
-        Taken = taken;
-    }
-}
+using UnityEngine.Serialization;
 
 public class WaveController : MonoBehaviour, ISubject
 {
-    [SerializeField] private Transform spawnPoints;
-    [SerializeField] private WaveData waveData;
-    [SerializeField] private GameObject puff;
-    private readonly List<SpawnPoint> _spawnPoints = new List<SpawnPoint>();
-    private readonly List<GameObject> _colliders = new List<GameObject>();
+    [SerializeField] private TimerView timerView;
+    [SerializeField] private Transform parentOfEnemies;
+    [SerializeField] private Transform parentOfSpawnPoints;
+    [SerializeField] private WaveDataObject waveDataObject;
 
-    private int _wave;
-    
     private readonly List<IObserver> _observers = new List<IObserver>();
+    private readonly List<SpawnPoint> _spawnPoints = new List<SpawnPoint>();
 
+    private int _waveCount;
+    private int _waveLenght;
+    private float _waveDuration;
+    private IEnumerator _waveRoutine;
+    
     private void Start()
     {
-        SetSpawnPointList();
-        SetNewWave();
+        _waveLenght = waveDataObject.wavesConfiguration.Length;
+        _waveRoutine = WaveRunning();
+        
+        AddSpawnPointsToTheList();
+        CreateNewWave();
     }
-
-    public void SetNewWave()
-    {
-        SpawnColliders(waveData.waves[_wave]);
-        _wave++;
-    }
-
-    private void SetSpawnPointList()
-    {
-        foreach (Transform point in spawnPoints)
-        {
-            _spawnPoints.Add(new SpawnPoint(point, false));
-        }
-    }
-
-    private void SpawnColliders(Wave wave)
-    {
-        Debug.Log(wave.name);
-
-        for (var i = 0; i < wave.numberOfCollider; i++)
-        {
-            var point = SetRandomPoint();
-            var rand = Random.Range(0, wave.colliders.Length);
-            
-            var position = point.Trans.position;
-            var rotation = point.Trans.rotation;
-            
-            var col = Instantiate(wave.colliders[rand], position, rotation);
-            var p = Instantiate(puff, position, rotation);
-            
-            col.SetActive(false);
-            p.SetActive(false);
-            
-            _colliders.Add(col);
-            _colliders.Add(p);
-        }
-    }
-
-    private SpawnPoint SetRandomPoint()
-    {
-        Debug.Log("a");
-        var rand = Random.Range(0, _spawnPoints.Count);
-        var point = _spawnPoints[rand];
-
-        if (point.Taken)
-        {
-            SetRandomPoint();
-        }
-
-        point.Taken = true;
-        return point;
-    }
-
-    public void EnableColliders()
-    {
-        foreach (var o in _colliders)
-        {
-            o.SetActive(true);
-        }
-
-        _colliders.Clear();
-    }
-
+    
+    // subject implementation
     public void Subscribe(IObserver observer)
     {
         _observers.Add(observer);
@@ -109,5 +44,156 @@ public class WaveController : MonoBehaviour, ISubject
         {
             observer.Notify(this);
         }
+    }
+    
+    private void AddSpawnPointsToTheList()
+    {
+        foreach (Transform point in parentOfSpawnPoints)
+        {
+            _spawnPoints.Add(new SpawnPoint(point, false));
+        }
+    }
+
+    public void CreateNewWave()
+    {
+        if (_waveCount >= _waveLenght)
+        {
+            print("Finish!!!");
+            return;
+        }
+
+        var wave = waveDataObject.wavesConfiguration[_waveCount];
+        
+        CreateEnemiesByWave(wave);
+        
+        _waveDuration = wave.duration;
+        _waveCount++;
+    }
+
+    private void CreateEnemiesByWave(WaveConfiguration waveConfiguration)
+    {
+        print(waveConfiguration.name);
+
+        for (var i = 0; i < waveConfiguration.numberOfEnemies; i++)
+        {
+            var lootObjects = waveConfiguration.enemiesLoot;
+            var totalLoot = CalculateTotalLoot(lootObjects);
+            var index = GetLootIndex(lootObjects, totalLoot);
+            
+            var obj = waveConfiguration.enemiesLoot[index];
+            var prefab = obj.prefab;
+            
+            var point = GetRandomPoint();
+            var position = point.Trans.position;
+            var rotation = point.Trans.rotation;
+            
+            var enemy = Instantiate(prefab, position, rotation, parentOfEnemies);
+            enemy.gameObject.SetActive(false);
+            enemy.Force = obj.force;
+            
+            Subscribe(enemy);
+        }
+    }
+    
+    private int CalculateTotalLoot(EnemyLootObject[] objects)
+    {
+        var result = 0;
+
+        foreach (var t in objects)
+        {
+            result += t.loot;
+        }
+
+        return result;
+    }
+    
+    private int GetLootIndex(EnemyLootObject[] objects, int totalLoot)
+    {
+        var rand = Random.Range(0, totalLoot);
+
+        var result = 0;
+        var accumulate = 0;
+
+        for (var i = 0; i < objects.Length; i++)
+        {
+            var part = objects[i];
+            if (part.loot == 0)
+            {
+                continue;
+            }
+            
+            accumulate += part.loot;
+
+            if (rand > accumulate)
+            {
+                continue;
+            }
+            
+            result = i;
+            break;
+        }
+
+        return result;
+    }
+    
+    private SpawnPoint GetRandomPoint()
+    {
+        print("count");
+        
+        var rand = Random.Range(0, _spawnPoints.Count);
+        var point = _spawnPoints[rand];
+
+        if (point.Taken)
+        {
+            GetRandomPoint();
+        }
+
+        point.Taken = true;
+        return point;
+    }
+
+    private void EnableEnemies()
+    {
+        foreach (Transform o in parentOfEnemies)
+        {
+            o.gameObject.SetActive(true);
+        }
+    }
+
+    public void StartWave()
+    {
+        EnableEnemies();
+        StartCoroutine(_waveRoutine);
+    }
+
+    public void EndWave()
+    {
+        StopCoroutine(_waveRoutine);
+    }
+
+    private IEnumerator WaveRunning()
+    {
+        while (_waveDuration > 0f)
+        {
+            _waveDuration -= Time.deltaTime;
+            DisplayTime(_waveDuration);
+            yield return null;
+        }
+        
+        _waveDuration = 0f;
+        DisplayTime(_waveDuration);
+
+        EndWave();
+    }
+
+    private void DisplayTime(float time)
+    {
+        var minutes = Mathf.FloorToInt(time / 60);
+        var seconds = Mathf.FloorToInt(time % 60);
+        var milliSeconds = (time % 1) * 1000;
+
+        var text = $"{minutes:0}:{seconds:00}:{milliSeconds:000}";
+        
+        timerView.SetTimeInText(text);
     }
 }

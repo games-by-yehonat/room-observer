@@ -2,7 +2,7 @@
 
 public class DamageHitObject : MonoBehaviour
 {
-    [SerializeField] private ColliderHandler collision;
+    [SerializeField] private ReboundHandler collision;
     [SerializeField] private string hitTag;
 
     private void OnCollisionEnter2D(Collision2D hit)

@@ -1,15 +1,17 @@
 ﻿using UnityEngine;
 
-public class ColliderHandler : MonoBehaviour, IObserver
+public class ReboundHandler : MonoBehaviour, IObserver
 {
     [SerializeField] private Rigidbody2D body;
     [SerializeField] private GameObject puff;
     
     [Space(10)]
-    [SerializeField] [Range(0f, 10f)] private float force = 5f;
-
+    [SerializeField] [Range(0f, 20f)] private float force = 5f;
+    public float Force { set => force = value; }
+    
     private void Start()
     {
+        Instantiate(puff, transform.position, Quaternion.identity);
         GameController.Instance.Subscribe(this);
         Kick();
     }
@@ -39,7 +41,8 @@ public class ColliderHandler : MonoBehaviour, IObserver
     private void Disappear()
     {
         body.velocity = Vector2.zero;
-        Instantiate(puff, transform.position, Quaternion.identity);
+        Instantiate(puff, transform.position, Quaternion.identity); // TODO: Object pooling
+        
         Destroy(gameObject);
     }
 }

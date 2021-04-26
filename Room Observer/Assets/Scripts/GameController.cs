@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour, ISubject
 {
-    [SerializeField] private WaveController waveController;
+    [SerializeField] private WaveController _waveController;
     [SerializeField] private CameraShaker cameraShaker;
     [SerializeField] private HealthView healthView;
     
@@ -38,7 +38,7 @@ public class GameController : MonoBehaviour, ISubject
     
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Return))
+        if (Input.GetKeyDown(KeyCode.Return) && !IsDeath)
         {
             StartGame();
         }
@@ -60,7 +60,7 @@ public class GameController : MonoBehaviour, ISubject
     
     private void StartGame()
     {
-        waveController.EnableColliders();
+        _waveController.StartWave();
         TimerIsRunning = true;
         
         if (Playing)
@@ -80,7 +80,7 @@ public class GameController : MonoBehaviour, ISubject
         TimerIsRunning = false;
         
         NotifyObserver();
-        waveController.SetNewWave();
+        _waveController.CreateNewWave();
     }
 
     public void GameOver()
