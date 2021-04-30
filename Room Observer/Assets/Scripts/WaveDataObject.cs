@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.Serialization;
 
 [CreateAssetMenu(menuName = "Wave Data", fileName = "WaveData", order = 0)]
 public class WaveDataObject : ScriptableObject

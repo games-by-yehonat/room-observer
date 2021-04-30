@@ -4,22 +4,31 @@ public class ReboundHandler : MonoBehaviour, IObserver
 {
     [SerializeField] private Rigidbody2D body;
     [SerializeField] private GameObject puff;
-    
-    [Space(10)]
-    [SerializeField] [Range(0f, 20f)] private float force = 5f;
-    public float Force { set => force = value; }
+
+    private WaveHandler _handler;
+    private float _force;
+
+    public void Initialization(WaveHandler handler, float force)
+    {
+        _handler = handler;
+        _force = force;
+    }
     
     private void Start()
     {
-        Instantiate(puff, transform.position, Quaternion.identity);
-        GameController.Instance.Subscribe(this);
-        Kick();
+        EnablePuff();
+        ApplyForce();
     }
 
-    public void Kick()
+    private void EnablePuff()
+    {
+        Instantiate(puff, transform.position, Quaternion.identity);
+    }
+
+    public void ApplyForce()
     {
         var dir = new Vector2(DirectionValue(), DirectionValue());
-        body.velocity = dir * force;
+        body.velocity = dir * _force;
     }
 
     private float DirectionValue()
@@ -29,19 +38,19 @@ public class ReboundHandler : MonoBehaviour, IObserver
 
     public void Notify(ISubject subject)
     {
-        Disappear();
+        DestroyObject();
     }
 
-    public void RemoveObserver()
+    public void UnsubscribeObserverAndDestroy()
     {
-        GameController.Instance.Unsubscribe(this);
-        Disappear();
+        _handler.Unsubscribe(this);
+        DestroyObject();
     }
 
-    private void Disappear()
+    private void DestroyObject()
     {
         body.velocity = Vector2.zero;
-        Instantiate(puff, transform.position, Quaternion.identity); // TODO: Object pooling
+        EnablePuff();
         
         Destroy(gameObject);
     }

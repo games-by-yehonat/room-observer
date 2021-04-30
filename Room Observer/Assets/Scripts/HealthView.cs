@@ -14,6 +14,11 @@ public class HealthView : MonoBehaviour, IObserver
             return;
         }
 
+        SetHealthInUI(handler);
+    }
+
+    private void SetHealthInUI(HealthHandler handler)
+    {
         for (var i = 0; i < handler.MaxHealth; i++)
         {
             var healthState = i < handler.Health;

@@ -5,14 +5,14 @@ public class MovementHandler : MonoBehaviour
     [SerializeField] [Range(0f, 10f)] private float speed = 5f;
     [SerializeField] [Range(0f, 10f)] private float xBounds = 6f;
     [SerializeField] [Range(0f, 10f)] private float yBounds = 6f;
+    [SerializeField] private HealthHandler healthHandler; 
 
     private bool _facingRight;
     public float Move { get; private set; }
 
     private void Update()
     {
-        Debug.Log($"death: {GameController.Instance.IsDeath} coolDown {GameController.Instance.CoolDown} playing {GameController.Instance.Playing}");
-        if (GameController.Instance.IsDeath || GameController.Instance.CoolDown || !GameController.Instance.Playing)
+        if (GameController.Instance.IsDeath || healthHandler.GetCoolDown() || !GameController.Instance.Playing)
         {
             return;
         }
@@ -23,15 +23,6 @@ public class MovementHandler : MonoBehaviour
         Move = Mathf.Abs(horizontal) + Mathf.Abs((vertical));
         
         DoMove(horizontal, vertical);
-
-        if (horizontal > 0 && !_facingRight)
-        {
-            Flipping();
-        }
-        else if (horizontal < 0 && _facingRight)
-        {
-            Flipping();
-        }
     }
 
     private void DoMove(float horizontal, float vertical)
@@ -51,6 +42,15 @@ public class MovementHandler : MonoBehaviour
 
         position = direction;
         transform.position = position;
+        
+        if (horizontal > 0 && !_facingRight)
+        {
+            Flipping();
+        }
+        else if (horizontal < 0 && _facingRight)
+        {
+            Flipping();
+        }
     }
 
     private Vector2 SetSceneLimits(Vector2 dirNormal)

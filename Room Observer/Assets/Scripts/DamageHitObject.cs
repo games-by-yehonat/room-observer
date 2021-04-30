@@ -1,13 +1,14 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 
 public class DamageHitObject : MonoBehaviour
 {
-    [SerializeField] private ReboundHandler collision;
     [SerializeField] private string hitTag;
+    [SerializeField] private UnityEvent eventToToRaise;
 
     private void OnCollisionEnter2D(Collision2D hit)
     {
-        if(!hit.gameObject.CompareTag(hitTag) || GameController.Instance.CoolDown)
+        if(!hit.gameObject.CompareTag(hitTag))
         {
             return;
         }
@@ -15,6 +16,6 @@ public class DamageHitObject : MonoBehaviour
         var damageable = hit.gameObject.GetComponent<IDamageable>();
         damageable?.TakeDamage();
 
-        collision.RemoveObserver();
+        eventToToRaise?.Invoke();
     }
 }

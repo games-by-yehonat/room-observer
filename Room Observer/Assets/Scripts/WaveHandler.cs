@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-public class WaveController : MonoBehaviour, ISubject
+public class WaveHandler : MonoBehaviour, ISubject
 {
     [SerializeField] private TimerView timerView;
     [SerializeField] private Transform parentOfEnemies;
@@ -18,14 +17,7 @@ public class WaveController : MonoBehaviour, ISubject
     private float _waveDuration;
     private IEnumerator _waveRoutine;
     
-    private void Start()
-    {
-        _waveLenght = waveDataObject.wavesConfiguration.Length;
-        _waveRoutine = WaveRunning();
-        
-        AddSpawnPointsToTheList();
-        CreateNewWave();
-    }
+    public bool TimerIsRunning { get; private set; }
     
     // subject implementation
     public void Subscribe(IObserver observer)
@@ -44,6 +36,15 @@ public class WaveController : MonoBehaviour, ISubject
         {
             observer.Notify(this);
         }
+    }
+    
+    private void Start()
+    {
+        _waveLenght = waveDataObject.wavesConfiguration.Length;
+        _waveRoutine = WaveRunning();
+        
+        AddSpawnPointsToTheList();
+        CreateNewWave();
     }
     
     private void AddSpawnPointsToTheList()
@@ -67,6 +68,7 @@ public class WaveController : MonoBehaviour, ISubject
         CreateEnemiesByWave(wave);
         
         _waveDuration = wave.duration;
+        DisplayTime(_waveDuration);
         _waveCount++;
     }
 
@@ -88,9 +90,9 @@ public class WaveController : MonoBehaviour, ISubject
             var rotation = point.Trans.rotation;
             
             var enemy = Instantiate(prefab, position, rotation, parentOfEnemies);
+            enemy.Initialization(this, obj.force);
             enemy.gameObject.SetActive(false);
-            enemy.Force = obj.force;
-            
+
             Subscribe(enemy);
         }
     }
@@ -138,8 +140,6 @@ public class WaveController : MonoBehaviour, ISubject
     
     private SpawnPoint GetRandomPoint()
     {
-        print("count");
-        
         var rand = Random.Range(0, _spawnPoints.Count);
         var point = _spawnPoints[rand];
 
@@ -160,14 +160,29 @@ public class WaveController : MonoBehaviour, ISubject
         }
     }
 
+    private void CleanSpawnPoint()
+    {
+        foreach (var point in _spawnPoints)
+        {
+            point.Taken = false;
+        }
+    }
+
     public void StartWave()
     {
         EnableEnemies();
+        CleanSpawnPoint();
+
+        TimerIsRunning = true;
+        
         StartCoroutine(_waveRoutine);
     }
 
     public void EndWave()
     {
+        TimerIsRunning = false;
+        
+        NotifyObserver();
         StopCoroutine(_waveRoutine);
     }
 
@@ -182,7 +197,7 @@ public class WaveController : MonoBehaviour, ISubject
         
         _waveDuration = 0f;
         DisplayTime(_waveDuration);
-
+        CreateNewWave();
         EndWave();
     }
 

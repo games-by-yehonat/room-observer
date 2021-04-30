@@ -20,7 +20,6 @@ public class AnimationHandler : MonoBehaviour
 
     public void SetDamageState(bool state)
     {
-        GameController.Instance.SetCoolDown();
         _isDamage = state;
     }
 
