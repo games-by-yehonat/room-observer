@@ -1,9 +1,14 @@
 ﻿using TMPro;
 using UnityEngine;
 
-public class TimerView : MonoBehaviour
+public class TimerView : GUITween
 {
     [SerializeField] private TextMeshProUGUI timer;
+    
+    private void Start()
+    {
+        EnterFadeInScene();
+    }
 
     public void SetTimeInText(string value)
     {

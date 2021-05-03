@@ -2,10 +2,15 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HealthView : MonoBehaviour, IObserver
+public class HealthView : GUITween, IObserver
 {
     [SerializeField] private TextMeshProUGUI amount;
     [SerializeField] private Image[] thumbs;
+
+    private void Start()
+    {
+        EnterFadeInScene();
+    }
 
     public void Notify(ISubject subject)
     {

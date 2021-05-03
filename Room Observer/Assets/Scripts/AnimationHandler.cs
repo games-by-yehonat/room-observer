@@ -9,7 +9,7 @@ public class AnimationHandler : MonoBehaviour
 
     private void Update()
     {
-        if (GameController.Instance.IsDeath)
+        if (GameController.Instance.GetGameState() == GameState.Death)
         {
             return;
         }
@@ -25,9 +25,6 @@ public class AnimationHandler : MonoBehaviour
 
     public void SetDeathState()
     {
-        if (GameController.Instance.IsDeath)
-        {
-            animator.SetBool($"Death", true);
-        }
+        animator.SetBool($"Death", true);
     }
 }

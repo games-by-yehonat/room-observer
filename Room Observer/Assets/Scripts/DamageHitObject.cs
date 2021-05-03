@@ -14,8 +14,10 @@ public class DamageHitObject : MonoBehaviour
         }
 
         var damageable = hit.gameObject.GetComponent<IDamageable>();
-        damageable?.TakeDamage();
 
-        eventToToRaise?.Invoke();
+        if (damageable.TakeDamage())
+        {
+            eventToToRaise?.Invoke();    
+        }
     }
 }

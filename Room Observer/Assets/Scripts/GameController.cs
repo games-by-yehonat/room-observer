@@ -1,4 +1,14 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+
+public enum GameState
+{
+    None,
+    Menu,
+    Playing,
+    Pause,
+    Death
+}
 
 public class GameController : MonoBehaviour
 {
@@ -7,17 +17,18 @@ public class GameController : MonoBehaviour
     [SerializeField] private HealthView healthView;
     
     [Space(10)]
+    [SerializeField] private GameObject introCanvas;
+    [SerializeField] private GameObject guiCanvas;
+    [SerializeField] private GameObject pauseCanvas;
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject puffPrefab;
-    
-    public bool Playing { get; private set; }
-    public bool IsDeath { get; private set;  }
+
+    private GameState _state = GameState.None;
     public static GameController Instance { get; private set; }
 
     private GameObject _player;
     private GameObject _puff;
-
-
+    
     private void Awake()
     {
         Instance = this;
@@ -28,10 +39,52 @@ public class GameController : MonoBehaviour
     
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Return) && !IsDeath)
+        if (Input.GetKeyDown(KeyCode.Return))
         {
-            StartGame();
+            ExecuteMethodByState();
         }
+    }
+
+    private void ExecuteMethodByState()
+    {
+        switch (_state)
+        {
+            case GameState.None:
+                break;
+            case GameState.Menu:
+                EnableGUI();
+                break;
+            case GameState.Playing:
+                Pause();
+                break;
+            case GameState.Pause:
+                Resume();
+                break;
+            case GameState.Death:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private void EnableGUI()
+    {
+        introCanvas.SetActive(false);
+        guiCanvas.SetActive(true);
+    }
+
+    private void Pause()
+    {
+        pauseCanvas.SetActive(true);
+        Time.timeScale = 0f;
+        _state = GameState.Pause;
+    }
+
+    private void Resume()
+    {
+        pauseCanvas.SetActive(false);
+        Time.timeScale = 1f;
+        _state = GameState.Playing;
     }
 
     private void CreatePlayer()
@@ -50,26 +103,39 @@ public class GameController : MonoBehaviour
         _puff.SetActive(false);
     }
 
-    private void StartGame()
+    public void StartGame()
     {
-        if (Playing)
+        waveHandler.StartWave();
+        
+        if (_state == GameState.Playing)
         {
             return;
         }
-        
-        Playing = true;
+
+        _state = GameState.Playing;
         
         _player.SetActive(true);
         _puff.SetActive(true);
-        
-        waveHandler.StartWave();
     }
 
     public void GameOver()
     {
-        Playing = false;
-        IsDeath = true;
-        
+        _state = GameState.Death;
         waveHandler.EndWave();
+    }
+
+    public void SetGameState(GameState state)
+    {
+        _state = state;
+    }
+
+    public void SetMenuState()
+    {
+        SetGameState(GameState.Menu);
+    }
+
+    public GameState GetGameState()
+    {
+        return _state;
     }
 }

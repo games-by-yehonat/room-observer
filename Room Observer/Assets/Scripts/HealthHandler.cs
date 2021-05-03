@@ -54,30 +54,33 @@ public class HealthHandler : MonoBehaviour, IDamageable, ISubject
         _coolDown = false;
     }
 
-    public void TakeDamage()
+    public bool TakeDamage()
     {
+        return false;
+        
         if (_coolDown)
         {
-            return;
+            return false;
         }
         
         Health--;
 
         if (Health > 0)
         {
-            anim.SetDamageState(true);
             SetCoolDown();
+            anim.SetDamageState(true);
         }
         else
         {
             Health = 0;
             puff.SetActive(true);
+            anim.SetDeathState();
             GameController.Instance.GameOver();
         }
-        
-        anim.SetDeathState();
 
         NotifyObserver();
+
+        return true;
     }
 
     public bool GetCoolDown()

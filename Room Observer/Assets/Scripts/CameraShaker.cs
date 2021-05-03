@@ -9,7 +9,7 @@ public class CameraShaker : MonoBehaviour, IObserver
  
     private bool _shake;
 
-    private void BeginShake()
+    public void BeginShake()
     {
         _duration = duration;
         

@@ -12,7 +12,7 @@ public class MovementHandler : MonoBehaviour
 
     private void Update()
     {
-        if (GameController.Instance.IsDeath || healthHandler.GetCoolDown() || !GameController.Instance.Playing)
+        if (GameController.Instance.GetGameState() != GameState.Playing || healthHandler.GetCoolDown())
         {
             return;
         }

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class WaveHandler : MonoBehaviour, ISubject
 {
+    [SerializeField] private WaveView waveView;
     [SerializeField] private TimerView timerView;
     [SerializeField] private Transform parentOfEnemies;
     [SerializeField] private Transform parentOfSpawnPoints;
@@ -16,8 +17,6 @@ public class WaveHandler : MonoBehaviour, ISubject
     private int _waveLenght;
     private float _waveDuration;
     private IEnumerator _waveRoutine;
-    
-    public bool TimerIsRunning { get; private set; }
     
     // subject implementation
     public void Subscribe(IObserver observer)
@@ -41,8 +40,7 @@ public class WaveHandler : MonoBehaviour, ISubject
     private void Start()
     {
         _waveLenght = waveDataObject.wavesConfiguration.Length;
-        _waveRoutine = WaveRunning();
-        
+
         AddSpawnPointsToTheList();
         CreateNewWave();
     }
@@ -55,7 +53,7 @@ public class WaveHandler : MonoBehaviour, ISubject
         }
     }
 
-    public void CreateNewWave()
+    private void EnableNewWave()
     {
         if (_waveCount >= _waveLenght)
         {
@@ -63,8 +61,14 @@ public class WaveHandler : MonoBehaviour, ISubject
             return;
         }
 
+        CreateNewWave();
+        waveView.EnterFadeInScene();
+    }
+
+    public void CreateNewWave()
+    {
         var wave = waveDataObject.wavesConfiguration[_waveCount];
-        
+        waveView.SetWaveInText(wave.name);
         CreateEnemiesByWave(wave);
         
         _waveDuration = wave.duration;
@@ -74,8 +78,8 @@ public class WaveHandler : MonoBehaviour, ISubject
 
     private void CreateEnemiesByWave(WaveConfiguration waveConfiguration)
     {
-        print(waveConfiguration.name);
-
+        _observers.Clear();
+        
         for (var i = 0; i < waveConfiguration.numberOfEnemies; i++)
         {
             var lootObjects = waveConfiguration.enemiesLoot;
@@ -172,16 +176,13 @@ public class WaveHandler : MonoBehaviour, ISubject
     {
         EnableEnemies();
         CleanSpawnPoint();
-
-        TimerIsRunning = true;
         
+        _waveRoutine = WaveRunning();
         StartCoroutine(_waveRoutine);
     }
 
     public void EndWave()
     {
-        TimerIsRunning = false;
-        
         NotifyObserver();
         StopCoroutine(_waveRoutine);
     }
@@ -197,10 +198,10 @@ public class WaveHandler : MonoBehaviour, ISubject
         
         _waveDuration = 0f;
         DisplayTime(_waveDuration);
-        CreateNewWave();
         EndWave();
+        EnableNewWave();
     }
-
+    
     private void DisplayTime(float time)
     {
         var minutes = Mathf.FloorToInt(time / 60);
