@@ -56,8 +56,6 @@ public class HealthHandler : MonoBehaviour, IDamageable, ISubject
 
     public bool TakeDamage()
     {
-        return false;
-        
         if (_coolDown)
         {
             return false;

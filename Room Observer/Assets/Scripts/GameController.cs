@@ -7,6 +7,7 @@ public enum GameState
     Menu,
     Playing,
     Pause,
+    Finish,
     Death
 }
 
@@ -16,10 +17,14 @@ public class GameController : MonoBehaviour
     [SerializeField] private CameraShaker cameraShaker;
     [SerializeField] private HealthView healthView;
     
-    [Space(10)]
-    [SerializeField] private GameObject introCanvas;
+    [Header("Canvas ref")][Space(10)]
+    [SerializeField] private GameObject inCanvas;
+    [SerializeField] private GameObject outCanvas;
     [SerializeField] private GameObject guiCanvas;
+    [SerializeField] private GameObject fadeCanvas;
     [SerializeField] private GameObject pauseCanvas;
+    
+    [Header("Prefabs ref")][Space(10)]
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject puffPrefab;
 
@@ -60,6 +65,9 @@ public class GameController : MonoBehaviour
             case GameState.Pause:
                 Resume();
                 break;
+            case GameState.Finish:
+                EnableFadeCanvas();
+                break;
             case GameState.Death:
                 break;
             default:
@@ -67,9 +75,14 @@ public class GameController : MonoBehaviour
         }
     }
 
+    private void EnableFadeCanvas()
+    {
+        fadeCanvas.SetActive(true);
+    }
+
     private void EnableGUI()
     {
-        introCanvas.SetActive(false);
+        inCanvas.SetActive(false);
         guiCanvas.SetActive(true);
     }
 
@@ -137,5 +150,11 @@ public class GameController : MonoBehaviour
     public GameState GetGameState()
     {
         return _state;
+    }
+
+    public void GameFinished()
+    {
+        SetGameState(GameState.Finish);
+        outCanvas.SetActive(true);
     }
 }

@@ -57,7 +57,7 @@ public class WaveHandler : MonoBehaviour, ISubject
     {
         if (_waveCount >= _waveLenght)
         {
-            print("Finish!!!");
+            GameController.Instance.GameFinished();
             return;
         }
 
